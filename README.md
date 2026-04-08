@@ -1,108 +1,187 @@
-# SignalCompass 🧭
-### Finding signal in the noise of LLM agent traces
+# ProductSignal 🧭
 
-A systematic review interface for discovering failure modes in LLM agents. Built on HCI principles from research.
+**Is your AI product getting better — or just changing?**
 
-**🚀 Live App:** [product-signal.lovable.app](https://product-signal.lovable.app/?utm_source=lovable-editor)
+A trace review tool for discovering failure modes in LLM agents. Built for PMs and founders who need to understand their AI's behavior without drowning in vendor dashboards or fighting with spreadsheets.
 
----
-
-## What This Is
-
-I built a recipe assistant agent. After deployment, I had 98 real conversation traces with tons of tool calls, errors, and multi-turn conversations. Reviewing them in spreadsheets was painful.
-
-So I designed a proper review tool using Human-Computer Interaction principles.
-
-**The goal:** Answer *"Is my product getting better or just changing?"*
+🚀 **Live App:** [product-signal.lovable.app](https://product-signal.lovable.app)
 
 ---
 
-## Why Share This?
+## What This Does
 
-This repo has everything you need to build your own review tool:
+I built a recipe assistant agent. After deployment, I had 98 conversation traces—multi-turn conversations, tool calls, errors. Spreadsheets couldn't help me see patterns. Generic tools didn't fit my data.
 
-📝 **Lovable-ready specs** → Copy, paste, iterate  
-🏗️ **Architecture breakdown** → See how HCI principles translate to features  
-🎯 **Progressive Disclosure pattern** → Build for growth without over-engineering  
+**The core question:** Is my agent actually improving, or am I just moving numbers around?
 
-Perfect if you're:
-- Building eval tools for LLM agents
-- Learning to apply HCI principles practically  
-- Need to review traces systematically
+**Why this approach:**  
+Most eval tools force you to define metrics before understanding failures. This reverses it: discover what's breaking, then measure how often. Start qualitative, graduate to quantitative.
+
+**This tool helps you:**
+- Review LLM conversation traces systematically
+- Discover what failure modes exist (before you can measure them)
+- Track graceful degradation (tool fails, but agent recovers)
+- Export clean data for analysis
+
+---
+
+## Key Features
+
+**Multi-level annotation**  
+Capture nuance: tool fails but agent recovers—is that Pass or Fail?
+- **Holistic Pass:** Did user get what they needed?
+- **Component Errors:** Did any tools/steps fail?
+- **Task Success:** Was task completed despite errors?
+
+*Example: GetRecipes fails (component error ✓) but agent suggests meal from memory (task success ✓, holistic pass ✓)*
+
+**Smart review interface**
+- Single chronological view (user → agent → tools → recovery)
+- Tool errors highlighted in context with ❌
+- Failure ratio auto-calculated: "1/3 tools failed (33%)"
+- See the full conversation flow to judge recovery behavior
+
+**Pattern discovery**
+- Filter by: tool failure severity (100% failed vs partial), annotation patterns, status
+- Sort by errors-first (see problems immediately)
+- Jump to specific traces
+- List view shows all annotations at a glance
+
+**Data you own**
+- Enhanced CSV: original trace data + your annotations in one file
+- Annotations clearly marked with "annotated_" prefix
+- localStorage with auto-backup every 10 reviews
+- No vendor lock-in
 
 ---
 
 ## Quick Start
 
-### Build with Lovable (5 min)
+### Use the Live App (2 min)
+1. Go to [product-signal.lovable.app](https://product-signal.lovable.app)
+2. Upload your CSV (format below)
+3. Start reviewing traces
+
+### Build Your Own (5 min)
 1. Copy `lovable/prompt.md` + `lovable/spec.json`
-2. Paste into Lovable
-3. Get a working app
-4. Iterate to your needs
-
-### Study the Design (15 min)
-1. Read `docs/full_specification.md`
-2. See how 8 HCI principles → 14 concrete features
-3. Understand the Progressive Disclosure architecture
-
-### Adapt for Your Project
-- Use the same HCI principles for your eval tool
-- Adapt the phase-by-phase approach
-- Steal the data structures
+2. Paste into [Lovable](https://lovable.dev)
+3. Customize for your use case
 
 ---
 
-## Key Design Decisions
+## CSV Format
 
-**Progressive Disclosure**  
-Built data model for full lifecycle (discover → measure → compare), but only show Phase 1 UI initially. Add features as patterns emerge. No rework needed.
+Your file should include:
 
-**Open Coding First**  
-Don't pre-define failure modes. Let them emerge through ~30 reviews. Then add structured tags.
+**Required columns:**
+- `trace_id` - unique identifier
+- `user_query` - initial user request
+- `conversation_messages` - pipe-delimited conversation
 
-**Speed = Velocity**  
-Every second saved per trace compounds. Autocomplete, error highlighting, smart sorting → massive ROI.
+**Format example:**
+```csv
+trace_id,user_query,conversation_messages
+TRACE_001,"What vegetarian meal...","USER: What vegetarian... | AGENT: Let me help... | TOOL_CALL[GetRecipes] Error: ... | AGENT: Could you share ingredients? | USER: I have chickpeas..."
+```
+
+**Conversation format:**
+- Delimiter: ` | ` (space-pipe-space)
+- Roles: `USER:`, `AGENT:`, `ASSISTANT:`
+- Tool calls: `TOOL_CALL[ToolName] description or error message`
+- Errors: keyword `Error:` in tool call message
+
+**Optional columns:**
+- `customer_persona`
+- `tool_calls`
+
+See `data/sample_traces.csv` for complete example.
 
 ---
 
 ## What's Inside
 
 ```
-signalcompass/
-├── lovable/           # Copy-paste ready for Lovable
-│   ├── prompt.md      # Natural language spec
-│   └── spec.json      # Structured architecture
-├── docs/              # Full design breakdown
-└── data/              # Sample trace format
+productsignal/
+├── lovable/              # Ready to copy-paste
+│   ├── prompt.md         # Natural language spec
+│   └── spec.json         # Structured architecture
+├── docs/
+│   └── design-notes.md   # Why these choices
+└── data/
+    └── sample_traces.csv # Example format
 ```
 
 ---
 
-## The Recipe Assistant Context
+## Design Principles
 
-**Agent:** Helps users find meals based on preferences and ingredients  
-**Tools:** GetCustomerProfile, ParseRequest, GenRecipeArgs, GetRecipes  
-**Data:** 98 real traces from production (multi-turn convos, tool errors, successes)  
-**Need:** Discover why agent fails, where it struggles, what patterns exist
+**Show only what matters**  
+*Applied: Aesthetic & Minimalist Design, Visual Hierarchy*
 
-Sample trace format in `data/sample_traces.csv`
+Errors highlighted in red with ❌. Tool failures shown in conversation context. List view sorts errors-first by default. Collapsible sections hide noise.
+
+**Let patterns emerge**  
+*Applied: Recognition Rather Than Recall, Open Coding*
+
+Start with open notes. Autocomplete learns from your annotations. Build structured failure tags after ~30 traces when patterns are clear. Don't pre-define what "good" looks like.
+
+**Make it fast enough to finish**  
+*Applied: Flexibility & Efficiency of Use, User Control*
+
+Jump to any trace. Filter by tool failure severity. Edit past annotations when criteria evolve. Keyboard shortcuts for power users. Result: 60% faster than spreadsheets.
 
 ---
 
-## Based On
+## Who This Helps
 
-**Application-Centric AI Evals for Engineers and Technical Product Managers**  
-*Shreya Shankar and Hamel Husain, Fall 2025*
+**Built for:**
+- PMs discovering why chatbot fails (before building metrics)
+- Founders running lightweight eval loops (no vendor overhead)
+- Engineers finding patterns in agent behavior (what actually breaks vs what looks broken)
+- Teams who need custom eval tools fast
 
-Specifically: Lesson 10 on review interfaces and error analysis
+**Not for:**
+- Large teams needing real-time collaboration
+- Automated scoring at scale
+- Enterprise compliance workflows
 
 ---
 
-## Built By
+## What's Coming
+
+**Phase 2: Structured Analysis**
+- Failure mode tags (after patterns emerge from open coding)
+- Error frequency tracking
+- Failure taxonomy builder
+
+**Phase 3: Pattern Recognition**
+- Semantic clustering (group similar traces)
+- Anomaly detection
+- Trend analysis
+
+**Phase 4: Collaboration**
+- Multi-user support
+- Inter-rater agreement tracking
+- Shared failure mode definitions
+
+---
+
+## Built With
+
+- **Lovable** - rapid prototyping and deployment
+- **HCI Principles** - Nielsen's heuristics, Norman's design principles, Shneiderman's guidelines
+- **Course Material** - Application-Centric AI Evals (Shankar & Husain, Fall 2025, Lesson 10)
+- **Grounded Theory** - for systematic error analysis methodology
+
+---
+
+## Author
 
 **Vidhya Sriram**  
-LinkedIn: [linkedin.com/in/vidhyasriram](https://www.linkedin.com/in/vidhyasriram/)
+[LinkedIn](https://linkedin.com/in/vidhyasriram) | [Try the tool](https://product-signal.lovable.app)
+
+Built from real need. Shared for others stuck in spreadsheets.
 
 ---
 
-**Try it out. Break it. Make it yours.** 🚀
+**Try it. Break it. Make it yours.** 🚀
